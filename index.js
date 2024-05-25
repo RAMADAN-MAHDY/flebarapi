@@ -2,15 +2,28 @@ import express from 'express';
 import connectDB from './db.js';
 import Conditions from './chsma/condition.js';
 import User from './chsma/createuser.js';
+import DetailSchema from './chsma/details.js';
 import bcrypt from 'bcrypt';
 import cors from 'cors';
+// import bodyParser from 'body-parser';
+// import multer from 'multer';
+
+// const storage = multer.memoryStorage();
+// const upload = multer({ storage: storage, limits: { fileSize: 100 * 1024 * 1024 } });
 
 const app = express()
 const port = 5000;
+app.use((req, res, next) => {
+    const contentLength = parseInt(req.get('content-length'), 10);
+    console.log(`حجم البيانات: ${contentLength} bytes`);
+    next();
+  });
+  // زيادة الحد الأقصى لحجم البيانات المسموح به
+app.use(express.json({limit: '50mb'}));
+app.use(express.urlencoded({limit: '50mb', extended: true, parameterLimit: 50000}));
 connectDB();
-app.use(express.json())
+// app.use(express.json())
 app.use(cors()); 
-
 //log in 
 app.post('/login',async (req,res)=>{
 try{
@@ -48,30 +61,26 @@ try{
 }catch(err){
    return res.status(500).json({message : err.message})
 }
-
-
 })
 
+app.post('/condition', async (req, res) => {
+    try {
+        const { order, modelnumber, name, quantity, condition , imagePath } = req.body;
+        const orderisExists = await Conditions.findOne({ order });
 
-
-//post data 
-app.post('/condition', async (req,res)=>{
-    try{
-        const conditionData = req.body;
-        const orderisExists = await Conditions.findOne({order:conditionData.order});
-
-        if(orderisExists){
-            return res.status(301).json(` الامر ده موجود بالفعل  ${conditionData.order}`)
+        if (orderisExists) {
+            return res.status(301).json(`الامر ده موجود بالفعل ${order}`);
         }
-        await Conditions.create(conditionData);
-        return res.status(201).json('تم ارسال الطلب')
+        // const images = req.files.map(file => file.buffer.toString('base64'));
+        const conditionData = { order, modelnumber, name, quantity, condition, imagePath };
 
-    }catch(err){
-        return res.status(500).json({message : err.message})
+        await Conditions.create(conditionData);
+        return res.status(201).json('تم ارسال الطلب');
+    } catch (err) {
+        return res.status(500).json({ message: err.message });
     }
 });
-
-//put data 
+//put condition data 
 app.put('/condition/:id', async (req,res)=>{
     try{
         const { id } = req.params;
@@ -88,6 +97,65 @@ app.put('/condition/:id', async (req,res)=>{
         res.status(400).json({ error: error.message });
       }
 });
+//post conditon to conditions array
+app.post('/condition/details/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { stateDetail } = req.body;
+    
+        if (!id || !stateDetail) {
+            return res.status(400).json({ error: 'الحقول المطلوبة مفقودة' });
+        }
+
+        // Check if there is a condition with the specified idOrder
+        let existingCondition = await DetailSchema.findOne({ idOrder: id });
+
+        if (!existingCondition) {
+            // If no condition with this idOrder exists, create a new one
+            existingCondition = await DetailSchema.create({ idOrder: id, conditions: [stateDetail] });
+        } else {
+            // If a condition with this idOrder already exists, check if the stateDetail exists
+            const index = existingCondition.conditions.findIndex(detail => detail.condition === stateDetail.condition);
+            if (index !== -1) {
+                // If the stateDetail exists, update its values
+                existingCondition.conditions[index].number = stateDetail.number;
+                existingCondition.conditions[index].note = stateDetail.note;
+            } else {
+                // If the stateDetail doesn't exist, push it to the conditions array
+                existingCondition.conditions.push(stateDetail);
+            }
+            // Save the changes to the existing condition
+            await existingCondition.save();
+        }
+
+        res.status(200).json({ message: 'تمت إضافة تفاصيل الحالة بنجاح' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+//get datails condition
+app.get("/condition/details/:id" , async(req,res)=>{
+   
+   try{
+    const { id }= req.params ; 
+
+    const finddetails = await DetailSchema.findOne({idOrder: id});
+
+  if(!finddetails){
+    return  res.status(500).json("حدث خطا");
+  }
+
+  return res.status(200).json(finddetails);
+
+
+   }catch(error){
+    res.status(500).json({ error: error.message });
+   }
+})
+
+
+
 
 app.get('/condition', async (req, res) => {
   try {
@@ -97,7 +165,22 @@ app.get('/condition', async (req, res) => {
     res.status(500).json({ error: 'Failed to retrieve conditions' });
   }
 });
-
+//get by id
+app.get('/condition/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const conditions = await Conditions.findById(id);
+      
+      if (!conditions) {
+        return res.status(404).json({ error: 'Condition not found' });
+      }
+  
+      res.json(conditions);
+    } catch (error) {
+      console.error('Error retrieving condition:', error);
+      res.status(500).json({ error: 'Failed to retrieve conditions' });
+    }
+  });
 
 app.get('/', (req, res) => {
 

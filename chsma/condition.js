@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 
-const conditionSchema = new mongoose.Schema({
+const Schema = mongoose.Schema;
+
+const conditionSchema = new Schema({
    
     order : {
     type: Number,
@@ -23,6 +25,8 @@ const conditionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  imagePath: [String] ,
+ 
 });
 
  const conditions = mongoose.model('condition', conditionSchema);
