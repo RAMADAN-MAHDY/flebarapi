@@ -9,6 +9,8 @@ const conditionDetail = new Schema({
     },
     number: Number,
     note: String,
+    email:String,
+    timestamp: { type: Date, default: Date.now }
 });
 
 const conditionDetailSchema = new Schema({

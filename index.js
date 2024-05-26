@@ -102,26 +102,33 @@ app.post('/condition/details/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const { stateDetail } = req.body;
+        
     
         if (!id || !stateDetail) {
             return res.status(400).json({ error: 'الحقول المطلوبة مفقودة' });
         }
 
+        // إضافة الوقت الحالي إلى stateDetail
+        stateDetail.timestamp = new Date();
         // Check if there is a condition with the specified idOrder
         let existingCondition = await DetailSchema.findOne({ idOrder: id });
 
         if (!existingCondition) {
             // If no condition with this idOrder exists, create a new one
-            existingCondition = await DetailSchema.create({ idOrder: id, conditions: [stateDetail] });
+            existingCondition = await DetailSchema.create({ idOrder: id,conditions: [stateDetail] });
         } else {
             // If a condition with this idOrder already exists, check if the stateDetail exists
             const index = existingCondition.conditions.findIndex(detail => detail.condition === stateDetail.condition);
             if (index !== -1) {
                 // If the stateDetail exists, update its values
+                existingCondition.conditions[index].email = stateDetail.email ;
                 existingCondition.conditions[index].number = stateDetail.number;
                 existingCondition.conditions[index].note = stateDetail.note;
+                existingCondition.conditions[index].timestamp = new Date();
             } else {
                 // If the stateDetail doesn't exist, push it to the conditions array
+                stateDetail.timestamp = new Date();
+                existingCondition.conditions.email = stateDetail.email ;
                 existingCondition.conditions.push(stateDetail);
             }
             // Save the changes to the existing condition
