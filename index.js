@@ -3,7 +3,7 @@ import connectDB from './db.js';
 import Conditions from './chsma/condition.js';
 import User from './chsma/createuser.js';
 import DetailSchema from './chsma/details.js';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import cors from 'cors';
 // import bodyParser from 'body-parser';
 // import multer from 'multer';
@@ -23,7 +23,12 @@ app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb', extended: true, parameterLimit: 50000}));
 connectDB();
 // app.use(express.json())
-app.use(cors()); 
+const corsOptions = {
+    origin: 'https://elmahdy.vercel.app',
+    optionsSuccessStatus: 200
+  }
+  
+app.use(cors(corsOptions));
 //log in 
 app.post('/login',async (req,res)=>{
 try{
