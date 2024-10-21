@@ -24,7 +24,7 @@ app.use(express.urlencoded({limit: '50mb', extended: true, parameterLimit: 50000
 connectDB();
 // app.use(express.json())
 const corsOptions = {
-    origin: 'https://elmahdy.vercel.app',
+    origin: 'https://flebar.vercel.app',
     optionsSuccessStatus: 200
   }
   
