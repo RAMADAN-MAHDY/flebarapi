@@ -5,6 +5,7 @@ import User from './chsma/createuser.js';
 import DetailSchema from './chsma/details.js';
 import bcrypt from 'bcryptjs';
 import cors from 'cors';
+import TestBranch from './branch.js'
 // import bodyParser from 'body-parser';
 // import multer from 'multer';
 
@@ -195,8 +196,8 @@ app.get('/condition/:id', async (req, res) => {
   });
 
 app.get('/', (req, res) => {
-
-  res.send('Hello World!')
+console.log(TestBranch());
+  res.send(TestBranch());
 })
 
 app.listen(port, () => {
