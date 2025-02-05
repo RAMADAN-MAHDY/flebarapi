@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+dotenv.config(); 
 
-const uri = "mongodb+srv://ramadanmahdysaid:tBfd7W6oKGurN3jj@flepar.7fi1a.mongodb.net/?retryWrites=true&w=majority&appName=flepar";
+const uri = process.env.dbLink;
 
 const connectDB = async () => {
   try {
